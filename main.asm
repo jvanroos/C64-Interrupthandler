@@ -53,11 +53,19 @@ next    		!word 0
 				lda #%00000011
 				sta $d015
 				
-				lda #80
+; Sprite 1 and 2 or enabled and colliding on 1 pixel		
+				lda #1c
 				sta $d000
+				lda #$96
 				sta $d001
+
+				lda #$32
 				sta $d002
+				lda #$aa
 				sta $d003
+				
+				lda #$2a
+				sta $05e0
 				
 				cli               ; Interrupts weer aan
 
@@ -108,6 +116,7 @@ irq				pha
 			; Sprite Collision Interrupt
 			;-----------------------------------
 				inc $0427
+				inc $d827
 				lda #$04
 				sta $d019
 			;-----------------------------------
