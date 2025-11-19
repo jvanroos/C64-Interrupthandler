@@ -54,7 +54,7 @@ next    		!word 0
 				sta $d015
 				
 ; Sprite 1 and 2 or enabled and colliding on 1 pixel		
-				lda #1c
+				lda #$1c
 				sta $d000
 				lda #$96
 				sta $d001
@@ -90,6 +90,16 @@ irq				pha
 			; Raster interrupt
 			;-----------------------------------	
 				inc $07e7
+				lda #$07
+				sta $d020
+
+				ldx #$08
+-				dex
+				bne -
+
+				lda #$0e
+				sta $d020
+				
 				lda #$01
 				sta $d019
 			;-----------------------------------
