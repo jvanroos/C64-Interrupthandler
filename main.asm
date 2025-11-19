@@ -92,6 +92,7 @@ irq				pha
 				inc $07e7
 				lda #$07
 				sta $d020
+				sta $d021
 
 				ldx #$08
 -				dex
@@ -99,6 +100,8 @@ irq				pha
 
 				lda #$0e
 				sta $d020
+				lda #$06
+				sta $d021
 				
 				lda #$01
 				sta $d019
