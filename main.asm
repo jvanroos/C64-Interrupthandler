@@ -1,5 +1,7 @@
+; ----------------------------------------------------------
 !cpu 6502
 !to "main.prg", cbm 
+; ----------------------------------------------------------
 
 				* = $0801
 				
@@ -31,8 +33,8 @@ next    		!word 0
 				sta $dc0d         ; CIA interrupts uit
 				sta $dd0d
 					
-					;      o-- Sprite - Sprite Interrupt 
-					;      |o-- Sprite - Background Interrupt 
+					;      o-- Sprite <-> Sprite Interrupt 
+					;      |o-- Sprite <-> Background Interrupt 
 					;      ||o- Raster Interrupt
 					;      |||
 				lda #%00000111
@@ -42,9 +44,6 @@ next    		!word 0
 				and #$7f
 				sta $d011         ; bit7=0, dus raster < 256
 		
-				lda #100
-				sta $d012         ; Rasterlijn 100
-
 				lda #$0e
 				sta $d020         ; Borderkleur = cyaan
 				lda #$06
@@ -59,9 +58,9 @@ next    		!word 0
 				lda #$96
 				sta $d001
 
-				lda #$32
+				lda #$30
 				sta $d002
-				lda #$aa
+				lda #$a6
 				sta $d003
 				
 				lda #$2a
@@ -72,9 +71,13 @@ next    		!word 0
 ; --- Eindeloze hoofdloop ---
 mainloop:
 				inc $0400
+				inc $d800
 				jmp mainloop				
 				
-irq				pha
+;-----------------------------------
+irq				
+;-----------------------------------
+				pha
 				txa
 				pha
 				tya
@@ -89,22 +92,7 @@ irq				pha
 			;-----------------------------------
 			; Raster interrupt
 			;-----------------------------------	
-				inc $07e7
-				lda #$07
-				sta $d020
-				sta $d021
-
-				ldx #$08
--				dex
-				bne -
-
-				lda #$0e
-				sta $d020
-				lda #$06
-				sta $d021
-				
-				lda #$01
-				sta $d019
+				jsr RasterInterrupt
 			;-----------------------------------
 			; Sprite-Background Interrupt Check
 			;-----------------------------------
@@ -126,6 +114,8 @@ irq				pha
 				bit $d019
 				beq +
 			;-----------------------------------
+				
+			;-----------------------------------
 			; Sprite Collision Interrupt
 			;-----------------------------------
 				inc $0427
@@ -133,10 +123,13 @@ irq				pha
 				lda #$04
 				sta $d019
 			;-----------------------------------
+				
+			;-----------------------------------
 			; Reset Sprite Collision Registers
 			;-----------------------------------
 +				lda $d01e								;	$D01E = Sprite-sprite collision register (per bit welke sprites).
 				lda $d01f								;	$D01F = Sprite-background collision register.
+			;-----------------------------------
 				pla
 				tay
 				pla
@@ -144,3 +137,62 @@ irq				pha
 				pla
 				rti
 				
+RasterInterrupt:
+				inc $07e7
+				lda #$07
+				sta $d020
+				sta $d021
+			;-----------------------------------
+				ldx #8
+-				dex
+				bne -
+			;-----------------------------------
+				lda #$0e
+				sta $d020
+				lda #$06
+				sta $d021
+			;-----------------------------------
+				lda $d011
+				bmi +
+			;-----------------------------------
+				lda $d012
+				cmp #$fb
+				bcs +
+			;-----------------------------------
+				cmp #$4b
+				bcs .other_rasterline
+			;-----------------------------------
+				lda #$4b								; Set next rasterline interrupt
+				sta $d012
+				lda #$01
+				sta $d019
+			;-----------------------------------
+.other_rasterline
+				lda #$fb
+				sta $d012
+				lda #$01
+				sta $d019
+			;-----------------------------------
+				cli
+				rts
+				
+			;-----------------------------------
++				lda #$2d
+				sta $d012
+			;-----------------------------------
+				lda $d011
+				and #$7f
+				sta $d011
+			;-----------------------------------
+;				lda #$01
+				lda #$07
+				sta $d01a
+				lda #$01
+				sta $d019
+			;-----------------------------------
+				lda #$00
+				sta $d020
+			;-----------------------------------
+				cli
+				rts
+			;-----------------------------------
